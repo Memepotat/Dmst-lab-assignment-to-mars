@@ -28,3 +28,7 @@ jobs:
 
       - name: Run Tests
         run: mvn test
+
+      - name: Run Checkstyle (Code Quality)
+        run: mvn checkstyle:check
+
