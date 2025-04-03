@@ -35,6 +35,10 @@ jobs:
       - name: Build JAR file
         run: mvn clean package
 
+      
+      - name: Verify JAR file exists
+        run: ls -l target/
+
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest .
       
