@@ -31,4 +31,8 @@ jobs:
 
       - name: Run Checkstyle (Code Quality)
         run: mvn checkstyle:check
+      
+      - name: Build JAR file
+        run: mvn clean package
+      
 
