@@ -11,46 +11,46 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Java 21
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
+      
 
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      - name: Build with Maven
+        run: mvn clean package
 
-      - name: Install Checkstyle Plugin
-        run: mvn checkstyle:checkstyle
-
-      - name: Run Code Quality Check (Checkstyle)
-        run: mvn checkstyle:check
-        continue-on-error: false
-
-      - name: Run Unit Tests (JUnit)
+      - name: Run Tests
         run: mvn test
 
-      # Build the .jar file
-      - name: Build Jar
-        run: mvn clean package --file pom.xml
+      - name: Run Checkstyle (Code Quality)
+        run: mvn checkstyle:check
+      
+      - name: Build JAR file
+        run: mvn clean package
 
-      # Docker Login using GitHub Secrets
+      
+      - name: Verify JAR file exists
+        run: ls -l target/
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest .
+      
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build Docker Image
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest .
 
-      # Push Docker Image to Docker Hub
-      - name: Push Docker Image
+      - name: Push Docker Image to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest
+      
