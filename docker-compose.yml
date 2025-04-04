@@ -3,6 +3,7 @@ version: '3.8'
 services:
   backend:
     build: .
+    image: /nikosdml/marsmissionapp/
     ports:
       - "8080:8080"
     container_name: marsmission-backend

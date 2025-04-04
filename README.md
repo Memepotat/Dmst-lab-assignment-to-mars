@@ -37,10 +37,10 @@ A simple full-stack CRUD application to manage space station resources, built wi
 
 2. **Clone the repo**:
    ```bash
-   git clone https://github.com/your-username/mars-mission-crud.git
+   git clone https://github.com/Memepotat/Dmst-lab-assignment-to-mars.git
    cd mars-mission-crud
    
-3. **Run the entire stack (frontend + backend + database):**
+3. **Run the entire stack (frontend + backend):**
    ```bash
    docker-compose up --build
 
