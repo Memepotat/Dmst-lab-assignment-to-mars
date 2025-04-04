@@ -4,116 +4,228 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mars Mission Resources</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #1e1e1e;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #ff5733;
+      text-shadow: 2px 2px 5px rgba(255, 87, 51, 0.5);
+    }
+
+    #product-form {
+      display: flex;
+      flex-direction: column;
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #product-form input, #product-form button {
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+
+    #product-form input {
+      border: 1px solid #888;
+      background-color: #222;
+      color: #fff;
+    }
+
+    #product-form button {
+      border: none;
+      background-color: #ff5733;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #product-form button:hover {
+      background-color: #d14d24;
+    }
+
+    #product-list {
+      list-style-type: none;
+      padding: 0;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #product-list li {
+      background-color: #444;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .product-info {
+      flex-grow: 1;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: #2f9c47;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #268a3b;
+    }
+
+    .delete-btn {
+      background-color: #d14d24;
+    }
+
+    .delete-btn:hover {
+      background-color: #c13a1e;
+    }
+  </style>
 </head>
 <body>
-  <h1>Space Station Products</h1>
+  <h1>Mars Mission Product Management</h1>
 
   <form id="product-form">
     <input type="hidden" id="update-id" />
     <input type="text" id="name" placeholder="Product Name" required />
-    <input type="number" id="quantity" placeholder="Quantity" required />
+    <input type="number" id="quantity" placeholder="Quantity (0+)" min="0" required />
     <button type="submit" id="submit-btn">Add Product</button>
   </form>
 
-  <h2>Product List</h2>
+  <h2>Available Products</h2>
   <ul id="product-list"></ul>
 
   <script>
     const API_BASE = "http://localhost:8080/products";
-    let editProductId = null;  // This will store the ID of the product we're editing.
-  
+    let editProductId = null;
+
     async function fetchProducts() {
       const res = await fetch(API_BASE);
       const products = await res.json();
       const list = document.getElementById("product-list");
       list.innerHTML = "";
-  
+
       products.forEach((p) => {
         const li = document.createElement("li");
-        li.textContent = `${p.name} (Qty: ${p.quantity}) `;
-  
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.onclick = async () => {
-          await fetch(`${API_BASE}/${p.id}`, { method: "DELETE" });
-          fetchProducts();
-        };
-  
+
+        const info = document.createElement("div");
+        info.classList.add("product-info");
+        info.textContent = `${p.name} (Qty: ${p.quantity})`;
+
+        const actions = document.createElement("div");
+        actions.classList.add("actions");
+
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.onclick = () => {
           document.getElementById("name").value = p.name;
           document.getElementById("quantity").value = p.quantity;
-          editProductId = p.id;  // Store the ID of the product to be edited.
-  
-          // Change the button text to "Save" and update the handler.
+          editProductId = p.id;
+
           const submitBtn = document.getElementById("submit-btn");
-          submitBtn.textContent = "Save";
-          submitBtn.onclick = handleSave;  // Use handleSave instead of handleAdd.
+          submitBtn.textContent = "Save Product";
+          submitBtn.onclick = handleSave;
         };
-  
-        li.appendChild(editBtn);
-        li.appendChild(delBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.classList.add("delete-btn");
+        delBtn.onclick = async () => {
+          await fetch(`${API_BASE}/${p.id}`, { method: "DELETE" });
+          fetchProducts();
+        };
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        li.appendChild(info);
+        li.appendChild(actions);
         list.appendChild(li);
       });
     }
-  
-    // Handle save (update) instead of adding a new product
+
     async function handleSave(e) {
       e.preventDefault();
-  
-      const name = document.getElementById("name").value;
-      const quantity = document.getElementById("quantity").value;
-  
-      // Update the product by ID
+
+      const name = document.getElementById("name").value.trim();
+      const quantity = parseInt(document.getElementById("quantity").value, 10);
+
+      if (!name || isNaN(quantity) || quantity < 0) {
+        alert("Please enter a valid name and a quantity of 0 or more.");
+        return;
+      }
+
       await fetch(`${API_BASE}/${editProductId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, quantity }),
       });
-  
-      // Reset the form and change the button back to "Add"
+
       document.getElementById("product-form").reset();
       const submitBtn = document.getElementById("submit-btn");
-      submitBtn.textContent = "Add Product";  // Change button back to "Add"
-      submitBtn.onclick = handleAdd;  // Switch handler back to handleAdd.
-  
-      // Reset the editProductId
+      submitBtn.textContent = "Add Product";
+      submitBtn.onclick = handleAdd;
+
       editProductId = null;
-  
       fetchProducts();
     }
-  
-    // Handle adding a new product
+
     async function handleAdd(e) {
       e.preventDefault();
-  
-      const name = document.getElementById("name").value;
-      const quantity = document.getElementById("quantity").value;
-  
-      // Add the new product
+
+      const name = document.getElementById("name").value.trim();
+      const quantity = parseInt(document.getElementById("quantity").value, 10);
+
+      if (!name || isNaN(quantity) || quantity < 0) {
+        alert("Please enter a valid name and a quantity of 0 or more.");
+        return;
+      }
+
       await fetch(API_BASE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, quantity }),
       });
-  
+
       document.getElementById("product-form").reset();
       fetchProducts();
     }
-  
+
     document.getElementById("product-form").addEventListener("submit", (e) => {
       e.preventDefault();
       if (editProductId) {
-        handleSave(e);  // If we're editing, handle save.
+        handleSave(e);
       } else {
-        handleAdd(e);  // Otherwise, handle add.
+        handleAdd(e);
       }
     });
-  
+
     fetchProducts();
   </script>
-  
-  
+
 </body>
 </html>
