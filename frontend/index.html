@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mars Mission Resources</title>
+</head>
+<body>
+  <h1>Space Station Products</h1>
+
+  <form id="product-form">
+    <input type="hidden" id="update-id" />
+    <input type="text" id="name" placeholder="Product Name" required />
+    <input type="number" id="quantity" placeholder="Quantity" required />
+    <button type="submit" id="submit-btn">Add Product</button>
+  </form>
+
+  <h2>Product List</h2>
+  <ul id="product-list"></ul>
+
+  <script>
+    const API_BASE = "http://localhost:8080/products";
+    let editProductId = null;  // This will store the ID of the product we're editing.
+  
+    async function fetchProducts() {
+      const res = await fetch(API_BASE);
+      const products = await res.json();
+      const list = document.getElementById("product-list");
+      list.innerHTML = "";
+  
+      products.forEach((p) => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name} (Qty: ${p.quantity}) `;
+  
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.onclick = async () => {
+          await fetch(`${API_BASE}/${p.id}`, { method: "DELETE" });
+          fetchProducts();
+        };
+  
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => {
+          document.getElementById("name").value = p.name;
+          document.getElementById("quantity").value = p.quantity;
+          editProductId = p.id;  // Store the ID of the product to be edited.
+  
+          // Change the button text to "Save" and update the handler.
+          const submitBtn = document.getElementById("submit-btn");
+          submitBtn.textContent = "Save";
+          submitBtn.onclick = handleSave;  // Use handleSave instead of handleAdd.
+        };
+  
+        li.appendChild(editBtn);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+  
+    // Handle save (update) instead of adding a new product
+    async function handleSave(e) {
+      e.preventDefault();
+  
+      const name = document.getElementById("name").value;
+      const quantity = document.getElementById("quantity").value;
+  
+      // Update the product by ID
+      await fetch(`${API_BASE}/${editProductId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, quantity }),
+      });
+  
+      // Reset the form and change the button back to "Add"
+      document.getElementById("product-form").reset();
+      const submitBtn = document.getElementById("submit-btn");
+      submitBtn.textContent = "Add Product";  // Change button back to "Add"
+      submitBtn.onclick = handleAdd;  // Switch handler back to handleAdd.
+  
+      // Reset the editProductId
+      editProductId = null;
+  
+      fetchProducts();
+    }
+  
+    // Handle adding a new product
+    async function handleAdd(e) {
+      e.preventDefault();
+  
+      const name = document.getElementById("name").value;
+      const quantity = document.getElementById("quantity").value;
+  
+      // Add the new product
+      await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, quantity }),
+      });
+  
+      document.getElementById("product-form").reset();
+      fetchProducts();
+    }
+  
+    document.getElementById("product-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (editProductId) {
+        handleSave(e);  // If we're editing, handle save.
+      } else {
+        handleAdd(e);  // Otherwise, handle add.
+      }
+    });
+  
+    fetchProducts();
+  </script>
+  
+  
+</body>
+</html>
