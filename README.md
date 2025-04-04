@@ -46,4 +46,4 @@ A simple full-stack CRUD application to manage space station resources, built wi
 
 4. **Open the app in your browser:**
 
-    👉 http://localhost:8080
+    👉 http://localhost:80
