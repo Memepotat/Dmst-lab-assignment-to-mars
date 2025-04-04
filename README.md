@@ -43,6 +43,7 @@ A simple full-stack CRUD application to manage space station resources, built wi
    
 3. **Run the entire stack (frontend + backend):**
    ```bash
+   mvn clean package
    docker-compose up --build
 
 4. **Open the app in your browser:**
