@@ -11,47 +11,46 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
-      
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-      - name: Run Tests
+      - name: Install Checkstyle Plugin
+        run: mvn checkstyle:checkstyle
+
+      - name: Run Code Quality Check (Checkstyle)
+        run: mvn checkstyle:check
+        continue-on-error: false
+
+      - name: Run Unit Tests (JUnit)
         run: mvn test
 
-      - name: Run Checkstyle (Code Quality)
-        run: mvn checkstyle:check
-      
-      - name: Build JAR file
-        run: mvn clean package
+      # Build the .jar file
+      - name: Build Jar
+        run: mvn clean package --file pom.xml
 
-      
-      - name: Verify JAR file exists
-        run: ls -l target/
-
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest .
-      
+      # Docker Login using GitHub Secrets
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      # Build Docker Image
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest .
 
-      - name: Push Docker Image to Docker Hub
+      # Push Docker Image to Docker Hub
+      - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/marsmissionapp:latest
-      
