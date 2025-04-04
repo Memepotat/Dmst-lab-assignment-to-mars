@@ -2,19 +2,18 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    image: nikosdml/marsmissionapp-backend:latest
     ports:
       - "8080:8080"
     container_name: marsmission-backend
 
   frontend:
-    build: ./frontend
+    image: nikosdml/marsmissionapp-frontend:latest
     ports:
       - "80:80"
     container_name: marsmission-frontend
     depends_on:
       - backend
-
 
 networks:
   default:
