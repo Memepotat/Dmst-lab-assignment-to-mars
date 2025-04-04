@@ -14,6 +14,7 @@ A simple full-stack CRUD application to manage space station resources, built wi
   - Unit testing with JUnit
   - Maven build + Docker packaging
   - GitHub Actions automation
+  - Branch protection rules
 
 ---
 
